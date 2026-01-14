@@ -35,7 +35,7 @@ public class Category {
     @Column(CATEGORY_NAME_COLUMN)
     private String categoryName;
     @Column(STATUS_COLUMN)
-    private boolean status;
+    private boolean isActive;
     @Column(CREATED_DATE_COLUMN)
     @JsonSerialize(using = DateStringUtils.class)
     private LocalDateTime createdDate;
@@ -43,13 +43,13 @@ public class Category {
     @JsonSerialize(using = DateStringUtils.class)
     private LocalDateTime updatedDate;
 
-    public static CategoryBuilder from(CategoryDto categoryDto) {
+    public static CategoryBuilder from(Category category) {
         return Category.builder()
-                .categoryId(categoryDto.getCategoryId())
-                .categoryCode(categoryDto.getCategoryCode())
-                .categoryName(categoryDto.getCategoryName())
-                .status(categoryDto.isStatus())
-                .createdDate(categoryDto.getCreatedDate())
-                .updatedDate(categoryDto.getUpdatedDate());
+                .categoryId(category.getCategoryId())
+                .categoryCode(category.getCategoryCode())
+                .categoryName(category.getCategoryName())
+                .status(category.isStatus())
+                .createdDate(category.getCreatedDate())
+                .updatedDate(category.getUpdatedDate());
     }
 }

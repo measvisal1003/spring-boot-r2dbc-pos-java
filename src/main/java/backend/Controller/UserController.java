@@ -1,0 +1,53 @@
+package backend.Controller;
+
+import backend.Dto.UserDto;
+import backend.Entities.User;
+import backend.Request.Request;
+import backend.Request.Response;
+import backend.Service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1")
+@CrossOrigin("*")
+public class UserController {
+
+    private final UserService userService;
+
+    @GetMapping("/all")
+    public Flux<UserDto> findAll() {
+        return userService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Mono<User> findById(@PathVariable Long id) {
+        return userService.findById(id);
+    }
+
+    // Sign Up/In API
+    @PostMapping("/signup")
+    public Mono<User> signUp(@RequestBody User user) {
+        return userService.create(user);
+    }
+
+    @PostMapping("/signin")
+    public Mono<ResponseEntity<Response>> signIn(@RequestBody Request request) {
+        return userService.signIn(request)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+    }
+    // END
+
+    @GetMapping("/user/me")
+    public Mono<UserDto> whoAmI() {
+        return userService.whoAmI();
+    }
+
+
+}
