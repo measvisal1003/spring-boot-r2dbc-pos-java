@@ -18,11 +18,4 @@ public class CategoryDto {
     private String code;
     private String name;
     private boolean isActive;
-
-    public static Category update(Category category, CategoryDto categoryDto) {
-        category.setCode(categoryDto.getCode());
-        category.setName(categoryDto.getName());
-        category.setActive(categoryDto.isActive());
-        return category;
-    }
 }

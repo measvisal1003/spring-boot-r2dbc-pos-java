@@ -63,13 +63,12 @@ public class CategoryServiceImpl implements CategoryService {
 
 
     @Override
-    public Mono<CategoryDto> update(CategoryDto categoryDto) {
-        return categoryRepository.findById(categoryDto.getId())
+    public Mono<Category> update(Category category) {
+        return categoryRepository.findById(category.getId())
                 .flatMap(existingCategory -> {
-                    CategoryDto.update(existingCategory, categoryDto)
+                    Category.update(existingCategory)
                             .setUpdatedDate(LocalDateTime.now());
                     return categoryRepository.save(existingCategory);
-                })
-                .map(CategoryMapper::toDto);
+                });
     }
 }

@@ -14,14 +14,16 @@ public class PaginationUtils {
     public static final int DEFAULT_LIMIT = 10;
     public static final int DEFAULT_PAGE_NUMBER = 1;
 
-    public static Pageable createPageable(Integer pageNumber, Integer limit) {
+    public static Pageable createPageable(Integer pageNumber, Integer limit, Sort sort) {
         int pageSize = (limit != null) ? limit : DEFAULT_LIMIT;
-        int pageIndex = (pageNumber != null ? pageNumber : DEFAULT_PAGE_NUMBER) - 1;
-        return PageRequest.of(Math.max(pageIndex, 0), pageSize);
+        return PageRequest.of(pageNumber != null ? pageNumber : DEFAULT_PAGE_NUMBER,
+                pageSize,
+                sort);
     }
 
-    public static long calculateOffset(int pageNumber, int pageSize) {
-        return (long) Math.max(pageNumber, 0) * pageSize;
+    public static long calculateOffset(Integer pageNumber, Integer pageSize) {
+        return (long) (pageNumber != null ? pageNumber -1 : DEFAULT_PAGE_NUMBER -1) * (pageSize != null ? pageSize :
+                DEFAULT_LIMIT);
     }
 
     public static <T, R> Mono<PageResponse<R>> fetchPagedResponse(
@@ -30,23 +32,26 @@ public class PaginationUtils {
             Function<T, R> mapper,
             int pageNumber,
             int pageSize,
-            String activeColumn
+            String inActiveColumn,
+            Sort sort
     ) {
-        Pageable pageable = createPageable(pageNumber, pageSize);
+        Pageable pageable = createPageable(pageNumber, pageSize, sort);
         long offset = calculateOffset(pageable.getPageNumber(), pageable.getPageSize());
 
-        Mono<Long> count = r2dbcEntityTemplate.count(Query.query(Criteria.where(activeColumn).isTrue()), entityClass);
-
-        Query query = Query.query(Criteria.where(activeColumn).isTrue())
-                .limit(pageable.getPageSize())
+        Mono<Long> count = r2dbcEntityTemplate.count(Query.query(Criteria.where(inActiveColumn).isTrue()), entityClass);
+        Query query = Query.query(Criteria.where(inActiveColumn).isTrue())
                 .offset(offset)
-                .sort(pageable.getSort().isEmpty() ? Sort.by("id").ascending() : pageable.getSort());
-
-        return count.flatMap(totalRecords ->
-                r2dbcEntityTemplate.select(query, entityClass)
-                        .map(mapper)
-                        .collectList()
-                        .map(results -> new PageResponse<>(results, pageable.getPageNumber() + 1, pageable.getPageSize(), totalRecords))
+                .sort(pageable.getSort())
+                .limit(pageable.getPageSize());
+        return count.flatMap(totalRecords -> r2dbcEntityTemplate.select(query, entityClass)
+                .map(mapper)
+                .collectList()
+                .map(results -> new PageResponse<>(results,
+                        pageable.getPageNumber(),
+                        pageable.getPageSize(),
+                        totalRecords))
         );
     }
+
+
 }

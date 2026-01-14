@@ -12,6 +12,6 @@ public interface CategoryService {
     Flux<CategoryDto> findAll();
     Mono<Category> findById(Long id);
     Mono<Category> create(Category category);
-    Mono<CategoryDto> update(CategoryDto categoryDto);
+    Mono<Category> update(Category category);
 
 }

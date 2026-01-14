@@ -65,24 +65,6 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(id);
     }
 
-//    @Override
-//    public Mono<User> create(User user) {
-//        if (user.getEmployeeId() == null) {
-//            return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST,"Employee ID is required"));
-//        }
-//        String encodedPassword = passwordEncoder.encode(user.getPassword());
-//
-//        return userRepository.save(User.from(user)
-//                .role(Role.ROLE_USER)
-//                .password(encodedPassword)
-//                .employeeId(user.getEmployeeId())
-//                .build())
-//                .onErrorMap(
-//                    DuplicateKeyException.class, ex -> new ResponseStatusException(
-//                            HttpStatus.CONFLICT, "Employee ID already exist")
-//                );
-//    }
-
     @Override
     public Mono<User> create(User user) {
         var encodedPassword = passwordEncoder.encode(user.getPassword());

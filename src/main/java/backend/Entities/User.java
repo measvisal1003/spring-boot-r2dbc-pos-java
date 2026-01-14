@@ -1,6 +1,8 @@
 package backend.Entities;
 
 
+import backend.Utils.DateStringUtils;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,6 +10,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
+
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -19,8 +23,10 @@ public class User {
     public final static String ID_COLUMN = "id";
     public final static String USERNAME_COLUMN = "username";
     public final static String PASSWORD_COLUMN = "password";
-    public final static String EMAIL_COLUMN = "email";
     public final static String USER_ROLE = "role";
+    public final static String EMPLOYEE_ID_COLUMN = "employeeId";
+    public final static String CREATED_DATE_COLUMN = "createdDate";
+    public final static String UPDATED_DATE_COLUMN = "updatedDate";
 
     @Id
     @Column(ID_COLUMN)
@@ -29,9 +35,29 @@ public class User {
     private String username;
     @Column(PASSWORD_COLUMN)
     private String password;
-    @Column(EMAIL_COLUMN)
-    private String email;
     @Column(USER_ROLE)
-    private UserRole userRole;
+    private Role role;
+    @Column(EMPLOYEE_ID_COLUMN)
+    private Long employeeId;
+    @JsonSerialize(using = DateStringUtils.class)
+    private LocalDateTime createdDate;
+    @Column(UPDATED_DATE_COLUMN)
+    @JsonSerialize(using = DateStringUtils.class)
+    private LocalDateTime updatedDate;
+
+    public static UserBuilder from(User user) {
+        return User.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .employeeId(user.getEmployeeId());
+    }
+
+    public static User update(User user) {
+        user.setUsername(user.getUsername());
+        user.setPassword(user.getPassword());
+        user.setRole(user.getRole());
+        return user;
+    }
 
 }

@@ -22,27 +22,27 @@ import java.time.LocalDateTime;
 @Table("product")
 public class Product {
 
-    public static final String ID_COLUMN = "productId";
-    public static final String PRODUCT_CODE_COLUMN = "productCode";
-    public static final String PRODUCT_NAME_COLUMN = "productName";
+    public static final String LABEL = "product";
+    public static final String ID_COLUMN = "id";
+    public static final String CODE_COLUMN = "code";
+    public static final String NAME_COLUMN = "name";
     public static final String COST_COLUMN = "cost";
     public static final String PRICE_COLUMN = "price";
     public static final String QUANTITY_COLUMN = "quantity";
     public static final String UNIT_COLUMN = "unit";
-    public static final String IMAGE_PATH_COLUMN = "imagePath";
-    public static final String STATUS_COLUMN = "status";
-    public static final String CATEGORY_NAME_COLUMN = "categoryName";
-    public static final String CATEGORY_CODE_COLUMN = "categoryCode";
+    public static final String IS_ACTIVE_COLUMN = "isActive";
+    public static final String BRAND_ID_COLUMN = "brandId";
+    public static final String CATEGORY_ID_COLUMN = "categoryId";
     public static final String CREATED_DATE_COLUMN = "createdDate";
     public static final String UPDATED_DATE_COLUMN = "updatedDate";
 
     @Id
     @Column(ID_COLUMN)
-    private Long productId;
-    @Column(PRODUCT_CODE_COLUMN)
-    private String productCode;
-    @Column(PRODUCT_NAME_COLUMN)
-    private String productName;
+    private Long id;
+    @Column(CODE_COLUMN)
+    private String code;
+    @Column(NAME_COLUMN)
+    private String name;
     @Column(COST_COLUMN)
     private BigDecimal cost;
     @Column(PRICE_COLUMN)
@@ -51,14 +51,12 @@ public class Product {
     private int quantity;
     @Column(UNIT_COLUMN)
     private String unit;
-    @Column(IMAGE_PATH_COLUMN)
-    private String imagePath;
-    @Column(STATUS_COLUMN)
-    private boolean status;
-    @Column(CATEGORY_NAME_COLUMN)
-    private String categoryName;
-    @Column(CATEGORY_CODE_COLUMN)
-    private String categoryCode;
+    @Column(IS_ACTIVE_COLUMN)
+    private boolean isActive;
+    @Column(CATEGORY_ID_COLUMN)
+    private Long categoryId;
+    @Column(BRAND_ID_COLUMN)
+    private Long brandId;
     @Column(CREATED_DATE_COLUMN)
     @JsonSerialize(using = DateStringUtils.class)
     private LocalDateTime createdDate;
@@ -66,20 +64,26 @@ public class Product {
     @JsonSerialize(using = DateStringUtils.class)
     private LocalDateTime updatedDate;
 
-    public static ProductBuilder from(ProductDto productDto) {
+    public static ProductBuilder from(Product product) {
         return Product.builder()
-                .productId(productDto.getProductId())
-                .productCode(productDto.getProductCode())
-                .productName(productDto.getProductName())
-                .cost(productDto.getCost())
-                .price(productDto.getPrice())
-                .quantity(productDto.getQuantity())
-                .unit(productDto.getUnit())
-                .imagePath(productDto.getImagePath())
-                .status(productDto.isStatus())
-                .categoryName(productDto.getCategoryName())
-                .categoryCode(productDto.getCategoryCode())
-                .createdDate(productDto.getCreatedDate())
-                .updatedDate(productDto.getUpdatedDate());
+                .id(product.getId())
+                .code(product.getCode())
+                .name(product.getName())
+                .cost(product.getCost())
+                .price(product.getPrice())
+                .quantity(product.getQuantity())
+                .unit(product.getUnit())
+                .isActive(product.isActive());
+    }
+
+    public static Product update(Product product) {
+        product.setName(product.getName());
+        product.setCode(product.getCode());
+        product.setCost(product.getCost());
+        product.setPrice(product.getPrice());
+        product.setQuantity(product.getQuantity());
+        product.setUnit(product.getUnit());
+        product.setActive(product.isActive());
+        return product;
     }
 }

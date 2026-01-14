@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 @Table("category")
 public class Category {
 
+    public static final String LABEL = "category";
     public static final String ID_COLUMN = "categoryId";
     public static final String CATEGORY_CODE_COLUMN = "categoryCode";
     public static final String CATEGORY_NAME_COLUMN = "categoryName";
@@ -29,11 +30,11 @@ public class Category {
 
     @Id
     @Column(ID_COLUMN)
-    private Long categoryId;
+    private Long id;
     @Column(CATEGORY_CODE_COLUMN)
-    private String categoryCode;
+    private String code;
     @Column(CATEGORY_NAME_COLUMN)
-    private String categoryName;
+    private String name;
     @Column(STATUS_COLUMN)
     private boolean isActive;
     @Column(CREATED_DATE_COLUMN)
@@ -45,11 +46,18 @@ public class Category {
 
     public static CategoryBuilder from(Category category) {
         return Category.builder()
-                .categoryId(category.getCategoryId())
-                .categoryCode(category.getCategoryCode())
-                .categoryName(category.getCategoryName())
-                .status(category.isStatus())
+                .id(category.getId())
+                .code(category.getCode())
+                .name(category.getName())
+                .isActive(category.isActive())
                 .createdDate(category.getCreatedDate())
                 .updatedDate(category.getUpdatedDate());
+    }
+
+    public static Category update(Category category) {
+        category.setCode(category.getCode());
+        category.setName(category.getName());
+        category.setActive(category.isActive());
+        return category;
     }
 }
