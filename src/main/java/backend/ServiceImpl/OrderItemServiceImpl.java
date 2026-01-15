@@ -2,6 +2,7 @@ package backend.ServiceImpl;
 
 import backend.Dto.OrderDetails;
 import backend.Dto.OrderRequest;
+import backend.Entities.Category;
 import backend.Entities.OrderDetail;
 import backend.Entities.OrderItem;
 import backend.Entities.Product;
@@ -10,11 +11,11 @@ import backend.Repository.OrderItemRepository;
 import backend.Repository.ProductRepository;
 import backend.Service.OrderItemService;
 import backend.Service.UserService;
+import backend.Utils.NestedPaginationUtils;
 import backend.Utils.OrderNoGenerator;
 import backend.Utils.PageResponse;
 import backend.Utils.PaginationUtils;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
@@ -29,6 +30,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 @Service
 @AllArgsConstructor
@@ -41,48 +43,48 @@ public class OrderItemServiceImpl implements OrderItemService {
     private final R2dbcEntityTemplate r2dbcEntityTemplate;
 
     @Override
-    public Mono<OrderDetails> findAll() {
-
-        Mono<List<OrderDetail>> orderDetailsMono = orderDetailRepository.findAll()
-                .collectList();
-
-        Mono<List<OrderItem>> orderItemsMono = orderItemRepository.findAll()
-                .collectList();
-
-        return Mono.zip(orderItemsMono, orderDetailsMono)
-                .map(tuple -> new OrderDetails(
-                        tuple.getT1(),
-                        tuple.getT2()
-                ));
+    public Flux<OrderDetails> findAll() {
+        return orderItemRepository.findAll()
+                .flatMap(orderItem ->
+                        orderDetailRepository.findByOrderId(orderItem.getId())
+                                .collectList()
+                                .map(details -> new OrderDetails(orderItem, details))
+                );
     }
 
     @Override
-    public Mono<OrderDetails> findByOrderNo(String orderNo) {
-
-        Mono<List<OrderItem>> orderItemsMono =
-                orderItemRepository.findByOrderNo(orderNo)
-                        .collectList();
-
-        Mono<List<OrderDetail>> orderDetailsMono =
-                orderItemsMono.flatMapMany(Flux::fromIterable)
-                        .flatMap(item -> orderDetailRepository.findByOrderId(item.getId()))
-                        .collectList();
-
-        return Mono.zip(orderItemsMono, orderDetailsMono)
-                .map(tuple -> new OrderDetails(tuple.getT1(), tuple.getT2()));
+    public Flux<OrderDetails> findByOrderNo(String orderNo) {
+        return orderItemRepository.findByOrderNo(orderNo)
+                .switchIfEmpty(Mono.error(
+                        new ResponseStatusException(HttpStatus.NOT_FOUND,"Order not found")
+                ))
+                .flatMap(orderItem ->
+                        orderDetailRepository.findByOrderId(orderItem.getId())
+                                .collectList()
+                                .map(orderDetails -> new OrderDetails(orderItem, orderDetails))
+                );
     }
 
     @Override
-    public Mono<PageResponse<OrderItem>> findPagination(Integer pageNumber, Integer pageSize) {
-        return PaginationUtils.fetchPagedResponse(
+    public Mono<PageResponse<OrderDetails>> findPagination(Integer pageNumber, Integer pageSize) {
+
+        return NestedPaginationUtils.fetchPagination(
                 r2dbcEntityTemplate,
                 OrderItem.class,
-                null,
+                OrderItem.IS_PAID_COLUMN,
                 Optional.ofNullable(pageNumber).orElse(PaginationUtils.DEFAULT_PAGE_NUMBER),
                 Optional.ofNullable(pageSize).orElse(PaginationUtils.DEFAULT_LIMIT),
-                null,
-                Sort.by(Sort.Order.desc(OrderItem.CREATED_DATE_COLUMN)
-        ));
+
+                // Function to fetch OrderDetails for each OrderItem
+                orderItem -> r2dbcEntityTemplate.select(OrderDetail.class)
+                        .matching(Query.query(
+                                Criteria.where(OrderDetail.ORDER_ID_COLUMN)
+                                        .is(orderItem.getId())
+                        ))
+                        .all()
+                        .collectList(),
+                OrderDetails::new
+        );
     }
 
     @Override
@@ -97,6 +99,7 @@ public class OrderItemServiceImpl implements OrderItemService {
                     OrderItem.builder()
                             .orderNo(orderNo)
                             .userId(userId)
+                            .isPaid(true)
                             .createdDate(LocalDateTime.now())
                             .build()
                 )

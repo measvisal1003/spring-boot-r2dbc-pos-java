@@ -6,8 +6,7 @@ import backend.Entities.OrderItem;
 import java.util.List;
 
 public record OrderDetails(
-        List<OrderItem> orderItems,
+        OrderItem orderItems,
         List<OrderDetail> orderDetails
-
 ) {
 }

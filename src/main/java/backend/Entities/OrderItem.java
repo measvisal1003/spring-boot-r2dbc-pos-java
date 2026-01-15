@@ -25,6 +25,7 @@ public class OrderItem {
     public static final String ID_COLUMN = "id";
     public static final String ORDER_NO_COLUMN = "orderNo";
     public static final String USER_ID_COLUMN = "userId";
+    public static final String IS_PAID_COLUMN = "isPaid";
     public static final String CREATED_DATE_COLUMN = "createdDate";
 
     @Id
@@ -34,6 +35,8 @@ public class OrderItem {
     private String orderNo;
     @Column(USER_ID_COLUMN)
     private Long userId;
+    @Column(IS_PAID_COLUMN)
+    private boolean isPaid;
     @Column(CREATED_DATE_COLUMN)
     @JsonSerialize(using = DateStringUtils.class)
     private LocalDateTime createdDate;
