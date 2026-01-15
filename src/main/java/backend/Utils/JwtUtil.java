@@ -19,7 +19,7 @@ public class JwtUtil {
 
     public JwtUtil(Dotenv dotenv) {
         this.secretKey = Keys.hmacShaKeyFor(dotenv.get("JWT_SECRET").getBytes());
-        this.jwtExpirationMs = Long.parseLong(dotenv.get("JWT_EXPIRATION", "60000")); // default 600000 = 10 min
+        this.jwtExpirationMs = Long.parseLong(dotenv.get("JWT_EXPIRATION", "6000000")); // default 600000 = 10 min
     }
 
     public String generateToken(User user) {

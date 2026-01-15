@@ -53,5 +53,32 @@ public class PaginationUtils {
         );
     }
 
+    public static <T, R> Mono<PageResponse<R>> fetchNestedPageResponse(
+            R2dbcEntityTemplate r2dbcEntityTemplate,
+            Class<T> entityClass,
+            Function<T, R> mapper,
+            int pageNumber,
+            int pageSize,
+            Criteria criteria,
+            Sort sort
+    ) {
+        Pageable pageable = createPageable(pageNumber, pageSize, sort);
+        long offset = calculateOffset(pageable.getPageNumber(), pageable.getPageSize());
+
+        Mono<Long> count = r2dbcEntityTemplate.count(Query.query(criteria), entityClass);
+        Query query = Query.query(criteria)
+                .offset(offset)
+                .sort(pageable.getSort())
+                .limit(pageable.getPageSize());
+        return count.flatMap(totalRecords -> r2dbcEntityTemplate.select(query, entityClass)
+                .map(mapper)
+                .collectList()
+                .map(results -> new PageResponse<>(
+                        results,
+                        pageable.getPageNumber(),
+                        pageable.getPageSize(),
+                        totalRecords))
+        );
+    }
 
 }

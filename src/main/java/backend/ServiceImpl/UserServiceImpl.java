@@ -125,7 +125,24 @@ public class UserServiceImpl implements UserService {
     @Override
     public Mono<Long> currentUser() {
         return ReactiveSecurityContextHolder.getContext()
-                .map(ctx -> (CustomUserDetails) ctx.getAuthentication().getPrincipal())
-                .map(user -> new CurrentUser(user.getId()).id());
+                .map(SecurityContext::getAuthentication)
+                .flatMap(auth -> {
+                    Object principal = auth.getPrincipal();
+
+                    if (principal instanceof CustomUserDetails cud) {
+                        return Mono.just(cud.getId());
+                    }
+
+                    if (principal instanceof String username) {
+                        return userRepository.findByUsername(username)
+                                .map(User::getId);
+                    }
+
+                    return Mono.error(new ResponseStatusException(
+                            HttpStatus.UNAUTHORIZED,
+                            "Invalid authentication principal"
+                    ));
+                });
     }
+
 }
