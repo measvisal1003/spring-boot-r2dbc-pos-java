@@ -41,10 +41,10 @@ public class Employee {
     private boolean isActive;
     @Column(CREATED_DATE_COLUMN)
     @JsonSerialize(using = DateStringUtils.class)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdDate;
     @Column(UPDATED_DATE_COLUMN)
     @JsonSerialize(using = DateStringUtils.class)
-    private LocalDateTime updatedAt;
+    private LocalDateTime updatedDate;
 
     public static EmployeeBuilder from(Employee employee) {
         return Employee.builder()
@@ -53,8 +53,16 @@ public class Employee {
                 .lastName(employee.getLastName())
                 .email(employee.getEmail())
                 .isActive(employee.isActive())
-                .createdAt(employee.getCreatedAt())
-                .updatedAt(employee.getUpdatedAt());
+                .createdDate(employee.getCreatedDate())
+                .updatedDate(employee.getUpdatedDate());
+    }
+
+    public static Employee update(Employee employee) {
+        employee.setFirstName(employee.getFirstName());
+        employee.setLastName(employee.getLastName());
+        employee.setEmail(employee.getEmail());
+        employee.setActive(employee.isActive());
+        return employee;
     }
 
 }

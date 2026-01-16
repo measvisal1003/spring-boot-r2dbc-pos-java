@@ -1,12 +1,19 @@
 package backend.ServiceImpl;
 
 import backend.Dto.CategoryDto;
+import backend.Dto.CategoryProduct;
 import backend.Entities.Category;
+import backend.Entities.Product;
 import backend.Mapper.CategoryMapper;
 import backend.Repository.CategoryRepository;
 import backend.Service.CategoryService;
+import backend.Utils.NestedPaginationUtils;
+import backend.Utils.PageResponse;
+import backend.Utils.PaginationUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.data.relational.core.query.Criteria;
+import org.springframework.data.relational.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
@@ -15,6 +22,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -69,5 +77,31 @@ public class CategoryServiceImpl implements CategoryService {
                             .setUpdatedDate(LocalDateTime.now());
                     return categoryRepository.save(existingCategory);
                 });
+    }
+
+    @Override
+    public Mono<Long> delete(Long id) {
+        return categoryRepository.findById(id)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found")))
+                .flatMap(category ->
+                        categoryRepository.deleteById(id)
+                                .thenReturn(id)
+                );
+    }
+
+    @Override
+    public Mono<PageResponse<CategoryProduct>> findPagination(Integer pageNumber, Integer pageSize) {
+        return NestedPaginationUtils.fetchPagination(
+                r2dbcEntityTemplate,
+                Category.class,
+                Category.IS_ACTIVE_COLUMN,
+                Optional.ofNullable(pageNumber).orElse(PaginationUtils.DEFAULT_PAGE_NUMBER),
+                Optional.ofNullable(pageSize).orElse(PaginationUtils.DEFAULT_LIMIT),
+                category -> r2dbcEntityTemplate.select(Product.class)
+                        .matching(Query.query(Criteria.where(Product.CATEGORY_ID_COLUMN).is(category.getId())))
+                        .all()
+                        .collectList(),
+                CategoryProduct::new
+        );
     }
 }

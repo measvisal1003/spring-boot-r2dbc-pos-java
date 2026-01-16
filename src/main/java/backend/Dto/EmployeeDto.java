@@ -16,11 +16,4 @@ public class EmployeeDto {
     private String firstName;
     private String lastName;
     private String email;
-
-    public static Employee update(Employee employee, EmployeeDto employeeDto) {
-        employee.setFirstName(employeeDto.getFirstName());
-        employee.setLastName(employeeDto.getLastName());
-        employee.setEmail(employeeDto.getEmail());
-        return employee;
-    }
 }

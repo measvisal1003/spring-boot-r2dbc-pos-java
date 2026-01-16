@@ -1,8 +1,10 @@
 package backend.Controller;
 
 import backend.Dto.CategoryDto;
+import backend.Dto.CategoryProduct;
 import backend.Entities.Category;
 import backend.Service.CategoryService;
+import backend.Utils.PageResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -34,5 +36,15 @@ public class CategoryController {
     @PutMapping("/update")
     public Mono<Category> update(@RequestBody Category category) {
         return categoryService.update(category);
+    }
+
+    @DeleteMapping("/delete")
+    public Mono<Long> delete(@RequestParam Long id) {
+        return categoryService.delete(id);
+    }
+
+    @GetMapping
+    public Mono<PageResponse<CategoryProduct>> findPagination(@RequestParam Integer pageNumber, Integer pageSize) {
+        return categoryService.findPagination(pageNumber, pageSize);
     }
 }

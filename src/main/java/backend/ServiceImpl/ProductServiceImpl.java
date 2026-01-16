@@ -103,6 +103,16 @@ public class ProductServiceImpl implements ProductService {
                 });
     }
 
+    @Override
+    public Mono<Long> delete(Long id) {
+        return productRepository.findById(id)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found")))
+                .flatMap(product ->
+                            productRepository.deleteById(id)
+                                    .thenReturn(id)
+                        );
+    }
+
     //check existing for generating
     @Override
     public Mono<Boolean> existsByProductCode(String code) {

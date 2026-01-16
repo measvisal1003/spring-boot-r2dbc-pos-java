@@ -38,6 +38,11 @@ public class ProductController {
         return productService.update(product);
     }
 
+    @DeleteMapping("/delete")
+    public Mono<Long> delete(@RequestParam Long id) {
+        return productService.delete(id);
+    }
+
 
     // Additional Method
     //Check existing for generating

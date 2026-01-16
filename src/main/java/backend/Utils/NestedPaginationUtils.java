@@ -37,13 +37,24 @@ public class NestedPaginationUtils {
 //        Query baseQuery = Query.query(Criteria.where(activeColumn).is(activeColumnValue));
 
         Mono<Long> countMono = template.count(baseQuery, primaryClass);
+        // Without Mapper
+//        Flux<R> contentFlux = template.select(primaryClass)
+//                .matching(baseQuery.limit(size).offset(offset))
+//                .all()
+//                .flatMap(primary ->
+//                        fetchSecondary.apply(primary)
+//                                .map(secondary -> resultMapper.apply(primary, secondary))
+//                );
+
+        // With Mapper
         Flux<R> contentFlux = template.select(primaryClass)
                 .matching(baseQuery.limit(size).offset(offset))
                 .all()
                 .flatMap(primary ->
-                        fetchSecondary.apply(primary)
-                                .map(secondary -> resultMapper.apply(primary, secondary))
+                        fetchSecondary.apply(primary)                       // P -> Mono<List<C>>
+                                .map(children -> resultMapper.apply(primary, children)) // combine to R
                 );
+
 
         return countMono.flatMap(total ->
                 contentFlux.collectList()

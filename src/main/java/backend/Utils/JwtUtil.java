@@ -16,21 +16,39 @@ public class JwtUtil {
 
     private final Key secretKey;
     private final long jwtExpirationMs;
+    private boolean noExpire;
 
     public JwtUtil(Dotenv dotenv) {
         this.secretKey = Keys.hmacShaKeyFor(dotenv.get("JWT_SECRET").getBytes());
-        this.jwtExpirationMs = Long.parseLong(dotenv.get("JWT_EXPIRATION", "6000000")); // default 600000 = 10 min
+        this.noExpire = Boolean.parseBoolean(dotenv.get("JWT_NO_EXPIRE", "false"));
+        this.jwtExpirationMs = noExpire ? Long.MAX_VALUE : Long.parseLong(dotenv.get("JWT_EXPIRATION", "6000000")); // default 600000 = 10 min
     }
 
     public String generateToken(User user) {
-        return Jwts.builder()
+        var builder = Jwts.builder()
                 .setSubject(user.getUsername())
                 .claim("role", "ROLE_" + user.getRole().name())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(secretKey)
-                .compact();
-    }   
+                .signWith(secretKey);
+
+        if (!noExpire) {
+            builder.setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs));
+        } else {
+            builder.setExpiration(new Date(Long.MAX_VALUE)); // effectively never expires
+        }
+
+        return builder.compact();
+    }
+
+//    public String generateToken(User user) {
+//        return Jwts.builder()
+//                .setSubject(user.getUsername())
+//                .claim("role", "ROLE_" + user.getRole().name())
+//                .setIssuedAt(new Date())
+//                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+//                .signWith(secretKey)
+//                .compact();
+//    }
 
     public String extractUsername(String token) {
         return Jwts.parserBuilder().setSigningKey(secretKey).build()

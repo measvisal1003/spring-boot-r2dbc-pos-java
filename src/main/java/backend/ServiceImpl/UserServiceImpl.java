@@ -12,8 +12,12 @@ import backend.Request.Request;
 import backend.Request.Response;
 import backend.Service.UserService;
 import backend.Utils.JwtUtil;
+import backend.Utils.PageResponse;
+import backend.Utils.PaginationUtils;
 import lombok.AllArgsConstructor;
+import org.springframework.core.annotation.Order;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -25,6 +29,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -38,18 +43,32 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<Response> signIn(Request request) {
-        if (request.username() == null || request.username().isBlank() || request.password() == null || request.password().isBlank()) {
-            return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username or password is required"));
+
+        if (request.username() == null || request.username().isBlank()
+                || request.password() == null || request.password().isBlank()) {
+            return Mono.error(
+                    new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username or password is required")
+            );
         }
 
         return userRepository.findByUsername(request.username())
-                .switchIfEmpty(Mono.error(new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "User not found")))
+                .switchIfEmpty(Mono.error(
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+                ))
                 .flatMap(user -> {
-                    if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-                        return Mono.error(new ResponseStatusException(
-                                        HttpStatus.UNAUTHORIZED, "Invalid credentials"));
+
+                    if (!user.isActive()) {
+                        return Mono.error(
+                                new ResponseStatusException(HttpStatus.FORBIDDEN, "User account is inactive")
+                        );
                     }
+
+                    if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+                        return Mono.error(
+                                new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials")
+                        );
+                    }
+
                     return Mono.just(new Response(jwtUtil.generateToken(user)));
                 });
     }
@@ -99,7 +118,6 @@ public class UserServiceImpl implements UserService {
                 });
     }
 
-
     @Override
     public Mono<User> update(User user) {
         return userRepository.findById(user.getId())
@@ -109,6 +127,16 @@ public class UserServiceImpl implements UserService {
 
                     return userRepository.save(existingUser);
                 });
+    }
+
+    @Override
+    public Mono<Long> delete(Long id) {
+        return userRepository.findById(id)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")))
+                .flatMap(user ->
+                        userRepository.deleteById(id)
+                                .thenReturn(id)
+                );
     }
 
     @Override
@@ -143,6 +171,19 @@ public class UserServiceImpl implements UserService {
                             "Invalid authentication principal"
                     ));
                 });
+    }
+
+    @Override
+    public Mono<PageResponse<UserDto>> findPagination(Integer pageNumber, Integer pageSize) {
+        return PaginationUtils.fetchPagedResponse(
+                r2dbcEntityTemplate,
+                User.class,
+                UserMapper::toDto,
+                Optional.ofNullable(pageNumber).orElse(PaginationUtils.DEFAULT_PAGE_NUMBER),
+                Optional.ofNullable(pageSize).orElse(PaginationUtils.DEFAULT_LIMIT),
+                User.IS_ACTIVE_COLUMN,
+                Sort.by(User.CREATED_DATE_COLUMN).descending()
+        );
     }
 
 }
