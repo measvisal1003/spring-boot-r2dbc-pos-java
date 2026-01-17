@@ -2,10 +2,7 @@ package backend.ServiceImpl;
 
 import backend.Dto.OrderDetails;
 import backend.Dto.OrderRequest;
-import backend.Entities.Category;
-import backend.Entities.OrderDetail;
-import backend.Entities.OrderItem;
-import backend.Entities.Product;
+import backend.Entities.*;
 import backend.Repository.OrderDetailRepository;
 import backend.Repository.OrderItemRepository;
 import backend.Repository.ProductRepository;
@@ -123,21 +120,23 @@ public class OrderItemServiceImpl implements OrderItemService {
                                     OrderDetail detail = OrderDetail.builder()
                                             .orderId(orderItem.getId())
                                             .productId(product.getId())
+                                            .customerId(request.customerId())
                                             .quantity(request.quantity())
                                             .total(totalPrice)
                                             .build();
 
                                     return orderDetailRepository.save(detail)
-                                        .flatMap(saved ->
-                                            // Update Product Quantity After OrderDetail is saved
-                                            r2dbcEntityTemplate.update(Product.class)
-                                                .matching(Query.query(
-                                                    Criteria.where(Product.CODE_COLUMN).is(request.code())))
-                                                .apply(Update.update(
-                                                    Product.QUANTITY_COLUMN,
-                                                    product.getQuantity() - request.quantity()))
-                                                .thenReturn(saved)
-                                        );
+                                            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer ID not found")))
+                                            .flatMap(saved ->
+                                                // Update Product Quantity After OrderDetail is saved
+                                                r2dbcEntityTemplate.update(Product.class)
+                                                    .matching(Query.query(
+                                                        Criteria.where(Product.CODE_COLUMN).is(request.code())))
+                                                    .apply(Update.update(
+                                                        Product.QUANTITY_COLUMN,
+                                                        product.getQuantity() - request.quantity()))
+                                                    .thenReturn(saved)
+                                            );
                                 })
                         )
                         .collectList()
