@@ -1,5 +1,6 @@
 package backend.Controller;
 
+import backend.Dto.AddQuantity;
 import backend.Dto.ProductDto;
 import backend.Entities.Product;
 import backend.Repository.ProductRepository;
@@ -57,5 +58,10 @@ public class ProductController {
             @RequestParam("pageNumber") Integer pageNumber, Integer pageSize) {
         return productService.findPagination(pageNumber, pageSize);
 
+    }
+
+    @PutMapping("/add-quantity/{id}")
+    public Mono<Product> addQuantity(@PathVariable Long id, @RequestBody AddQuantity quantity) {
+        return productService.addQuantity(id, quantity.addQuantity());
     }
 }

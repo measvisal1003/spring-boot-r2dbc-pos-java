@@ -15,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
+import org.springframework.data.relational.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -133,6 +134,23 @@ public class ProductServiceImpl implements ProductService {
                 Sort.by(Sort.Order.desc(Product.CREATED_DATE_COLUMN),
                         Sort.Order.desc(Product.UPDATED_DATE_COLUMN))
         );
+    }
+
+    @Override
+    public Mono<Product> addQuantity(Long id, int addQuantity) {
+        return r2dbcEntityTemplate.select(Product.class)
+                .matching(Query.query(Criteria.where(Product.ID_COLUMN).is(id)))
+                .one()
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found")))
+                .flatMap( product -> {
+                    int newQuantity = product.getQuantity() + addQuantity;
+                    product.setQuantity(newQuantity);
+                    return r2dbcEntityTemplate.update(Product.class)
+                            .matching(Query.query(Criteria.where(Product.ID_COLUMN).is(id)))
+                            .apply(Update.update(Product.QUANTITY_COLUMN, newQuantity)
+                                    .set(Product.UPDATED_DATE_COLUMN, LocalDateTime.now()))
+                                    .thenReturn(product);
+                });
     }
 
 }
