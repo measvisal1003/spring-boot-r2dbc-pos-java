@@ -121,6 +121,7 @@ public class OrderItemServiceImpl implements OrderItemService {
                                             .orderId(orderItem.getId())
                                             .productId(product.getId())
                                             .customerId(request.customerId())
+                                            .paymentId(request.paymentId())
                                             .quantity(request.quantity())
                                             .total(totalPrice)
                                             .build();
@@ -130,10 +131,8 @@ public class OrderItemServiceImpl implements OrderItemService {
                                             .flatMap(saved ->
                                                 // Update Product Quantity After OrderDetail is saved
                                                 r2dbcEntityTemplate.update(Product.class)
-                                                    .matching(Query.query(
-                                                        Criteria.where(Product.CODE_COLUMN).is(request.code())))
-                                                    .apply(Update.update(
-                                                        Product.QUANTITY_COLUMN,
+                                                    .matching(Query.query(Criteria.where(Product.CODE_COLUMN).is(request.code())))
+                                                    .apply(Update.update(Product.QUANTITY_COLUMN,
                                                         product.getQuantity() - request.quantity()))
                                                     .thenReturn(saved)
                                             );
