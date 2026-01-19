@@ -6,6 +6,7 @@ import backend.Entities.*;
 import backend.Repository.OrderDetailRepository;
 import backend.Repository.OrderItemRepository;
 import backend.Repository.ProductRepository;
+import backend.Service.AuditLogService;
 import backend.Service.OrderItemService;
 import backend.Service.UserService;
 import backend.Utils.NestedPaginationUtils;
@@ -35,7 +36,7 @@ public class OrderItemServiceImpl implements OrderItemService {
 
     private final OrderItemRepository orderItemRepository;
     private final OrderDetailRepository orderDetailRepository;
-    private final ProductRepository productRepository;
+    private final AuditLogService auditLogService;
     private final UserService userService;
     private final R2dbcEntityTemplate r2dbcEntityTemplate;
 
@@ -121,7 +122,7 @@ public class OrderItemServiceImpl implements OrderItemService {
                                             .orderId(orderItem.getId())
                                             .productId(product.getId())
                                             .customerId(request.customerId())
-                                            .paymentId(request.paymentId())
+                                            .paymentMethod(request.paymentMethod().getValue())
                                             .quantity(request.quantity())
                                             .total(totalPrice)
                                             .build();
@@ -139,6 +140,10 @@ public class OrderItemServiceImpl implements OrderItemService {
                                 })
                         )
                         .collectList()
+                        .flatMap(saved ->
+                                auditLogService.logAction(userId, "CREATED_ORDER_ITEM: " + orderNo)
+                                    .thenReturn(saved)
+                        )
                 )
             );
     }

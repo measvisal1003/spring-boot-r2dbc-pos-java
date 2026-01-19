@@ -26,7 +26,7 @@ public class OrderDetail {
     public static final String ORDER_ID_COLUMN = "orderId";
     public static final String PRODUCT_ID_COLUMN = "productId";
     public static final String CUSTOMER_ID_COLUMN = "customerId";
-    public static final String PAYMENT_ID_COLUMN = "paymentId";
+    public static final String PAYMENT_METHOD_COLUMN = "paymentMethod";
     public static final String QUANTITY_COLUMN = "quantity";
     public static final String TOTAL_COLUMN = "total";
 
@@ -39,8 +39,8 @@ public class OrderDetail {
     private Long productId;
     @Column(CUSTOMER_ID_COLUMN)
     private Long customerId;
-    @Column(PAYMENT_ID_COLUMN)
-    private Long paymentId;
+    @Column(PAYMENT_METHOD_COLUMN)
+    private String paymentMethod;
     @Column(QUANTITY_COLUMN)
     private int quantity;
     @Column(TOTAL_COLUMN)
