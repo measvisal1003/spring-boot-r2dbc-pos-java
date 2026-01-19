@@ -1,7 +1,7 @@
 package backend.Controller;
 
 import backend.Entities.Expense;
-import backend.Entities.ExpenseDto;
+import backend.Dto.ExpenseDto;
 import backend.Service.ExpenseService;
 import backend.Utils.PageResponse;
 import lombok.AllArgsConstructor;

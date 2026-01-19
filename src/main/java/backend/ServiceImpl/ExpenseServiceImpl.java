@@ -1,8 +1,7 @@
 package backend.ServiceImpl;
 
 import backend.Entities.Expense;
-import backend.Entities.ExpenseDto;
-import backend.Entities.Product;
+import backend.Dto.ExpenseDto;
 import backend.Mapper.ExpenseMapper;
 import backend.Repository.ExpenseRepository;
 import backend.Service.ExpenseService;

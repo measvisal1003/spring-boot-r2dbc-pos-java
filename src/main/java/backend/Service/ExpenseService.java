@@ -1,7 +1,7 @@
 package backend.Service;
 
 import backend.Entities.Expense;
-import backend.Entities.ExpenseDto;
+import backend.Dto.ExpenseDto;
 import backend.Utils.PageResponse;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;

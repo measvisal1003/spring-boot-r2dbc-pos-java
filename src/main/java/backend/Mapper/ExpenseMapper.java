@@ -1,9 +1,7 @@
 package backend.Mapper;
 
-import backend.Dto.CustomerDto;
-import backend.Entities.Customer;
 import backend.Entities.Expense;
-import backend.Entities.ExpenseDto;
+import backend.Dto.ExpenseDto;
 
 public class ExpenseMapper {
 
