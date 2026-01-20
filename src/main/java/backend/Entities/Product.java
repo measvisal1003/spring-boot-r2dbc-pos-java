@@ -30,9 +30,9 @@ public class Product {
     public static final String PRICE_COLUMN = "price";
     public static final String QUANTITY_COLUMN = "quantity";
     public static final String UNIT_COLUMN = "unit";
-    public static final String IS_ACTIVE_COLUMN = "isActive";
     public static final String BRAND_ID_COLUMN = "brandId";
     public static final String CATEGORY_ID_COLUMN = "categoryId";
+    public static final String IS_ACTIVE_COLUMN = "isActive";
     public static final String CREATED_DATE_COLUMN = "createdDate";
     public static final String UPDATED_DATE_COLUMN = "updatedDate";
 
@@ -51,12 +51,12 @@ public class Product {
     private int quantity;
     @Column(UNIT_COLUMN)
     private String unit;
-    @Column(IS_ACTIVE_COLUMN)
-    private boolean isActive;
     @Column(CATEGORY_ID_COLUMN)
     private Long categoryId;
     @Column(BRAND_ID_COLUMN)
     private Long brandId;
+    @Column(IS_ACTIVE_COLUMN)
+    private boolean isActive;
     @Column(CREATED_DATE_COLUMN)
     @JsonSerialize(using = DateStringUtils.class)
     private LocalDateTime createdDate;

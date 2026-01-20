@@ -26,8 +26,7 @@ public class JwtAuthenticationFilter implements WebFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, @NotNull WebFilterChain chain) {
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-//        With Bearer Prefix
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) { // Bearer Prefix
             String token = authHeader.substring(7);
 
             if (jwtUtil.validateToken(token)) {
@@ -44,22 +43,6 @@ public class JwtAuthenticationFilter implements WebFilter {
                         ));
             }
         }
-
-//        Without Bearer Prefix
-//        if (authHeader != null) {
-//            String token = authHeader;
-//            if (jwtUtil.validateToken(token)) {
-//                String username = jwtUtil.extractUsername(token);
-//                String role = jwtUtil.extractRole(token);
-//
-//                UsernamePasswordAuthenticationToken authentication =
-//                        new UsernamePasswordAuthenticationToken(username, null,
-//                                java.util.List.of(() -> role));
-//
-//                return chain.filter(exchange)
-//                        .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));
-//            }
-//        }
         return chain.filter(exchange);
     }
 }

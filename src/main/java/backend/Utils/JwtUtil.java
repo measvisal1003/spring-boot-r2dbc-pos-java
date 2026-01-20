@@ -65,7 +65,6 @@ public class JwtUtil {
                 .get("id", Long.class);
     }
 
-
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
