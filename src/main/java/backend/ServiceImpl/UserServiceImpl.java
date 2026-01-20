@@ -1,6 +1,5 @@
 package backend.ServiceImpl;
 
-import backend.Dto.CurrentUser;
 import backend.Dto.UserDto;
 import backend.Entities.CustomUserDetails;
 import backend.Entities.Role;
@@ -15,8 +14,6 @@ import backend.Utils.JwtUtil;
 import backend.Utils.PageResponse;
 import backend.Utils.PaginationUtils;
 import lombok.AllArgsConstructor;
-import org.springframework.core.annotation.Order;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.http.HttpStatus;
@@ -68,7 +65,6 @@ public class UserServiceImpl implements UserService {
                                 new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials")
                         );
                     }
-
                     return Mono.just(new Response(jwtUtil.generateToken(user)));
                 });
     }

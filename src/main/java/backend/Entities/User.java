@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Table("user")
-public class User {
+public class User{
     public final static String LABEL = "USER";
     public final static String ID_COLUMN = "id";
     public final static String USERNAME_COLUMN = "username";

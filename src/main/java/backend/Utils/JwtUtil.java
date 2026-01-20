@@ -4,7 +4,10 @@ import backend.Entities.User;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -25,42 +28,45 @@ public class JwtUtil {
     }
 
     public String generateToken(User user) {
-        var builder = Jwts.builder()
+        return Jwts.builder()
                 .setSubject(user.getUsername())
+                .claim("id", user.getId())
                 .claim("role", "ROLE_" + user.getRole().name())
                 .setIssuedAt(new Date())
-                .signWith(secretKey);
-
-        if (!noExpire) {
-            builder.setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs));
-        } else {
-            builder.setExpiration(new Date(Long.MAX_VALUE)); // effectively never expires
-        }
-
-        return builder.compact();
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .signWith(secretKey)
+                .compact();
     }
 
-//    public String generateToken(User user) {
-//        return Jwts.builder()
-//                .setSubject(user.getUsername())
-//                .claim("role", "ROLE_" + user.getRole().name())
-//                .setIssuedAt(new Date())
-//                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-//                .signWith(secretKey)
-//                .compact();
-//    }
-
     public String extractUsername(String token) {
-        return Jwts.parserBuilder().setSigningKey(secretKey).build()
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
                 .parseClaimsJws(token)
-                .getBody().getSubject();
+                .getBody()
+                .getSubject();
     }
 
     public String extractRole(String token) {
-        return (String) Jwts.parserBuilder().setSigningKey(secretKey).build()
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
                 .parseClaimsJws(token)
-                .getBody().get("role");
+                .getBody()
+                .get("role", String.class);
     }
+
+    public Long extractUserId(String token) {
+        Number id = (Number) Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("id");
+
+        return id != null ? id.longValue() : null;
+    }
+
 
     public boolean validateToken(String token) {
         try {
