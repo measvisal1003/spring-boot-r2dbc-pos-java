@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.stereotype.Component;
@@ -23,26 +25,52 @@ public class JwtAuthenticationFilter implements WebFilter {
     private final JwtUtil jwtUtil;
 
     @NotNull
+//    @Override
+//    public Mono<Void> filter(ServerWebExchange exchange, @NotNull WebFilterChain chain) {
+//        String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+//        if (authHeader != null && authHeader.startsWith("Bearer ")) { // Bearer Prefix
+//            String token = authHeader.substring(7);
+//
+//            if (jwtUtil.validateToken(token)) {
+//                String username = jwtUtil.extractUsername(token);
+//                String role = jwtUtil.extractRole(token);
+//
+//                UsernamePasswordAuthenticationToken authentication =
+//                        new UsernamePasswordAuthenticationToken(username, null,
+//                                List.of(() -> role));
+//
+//                return chain.filter(exchange)
+//                        .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(
+//                                Mono.just(new SecurityContextImpl(authentication))
+//                        ));
+//            }
+//        }
+//        return chain.filter(exchange);
+//    }
+
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, @NotNull WebFilterChain chain) {
-        String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        if (authHeader != null && authHeader.startsWith("Bearer ")) { // Bearer Prefix
-            String token = authHeader.substring(7);
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
-            if (jwtUtil.validateToken(token)) {
-                String username = jwtUtil.extractUsername(token);
-                String role = jwtUtil.extractRole(token);
+        String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(username, null,
-                                List.of(() -> role));
-
-                return chain.filter(exchange)
-                        .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(
-                                Mono.just(new SecurityContextImpl(authentication))
-                        ));
-            }
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return chain.filter(exchange);
         }
-        return chain.filter(exchange);
+
+        String token = authHeader.substring(7);
+
+        if (!jwtUtil.validateToken(token)) {
+            return chain.filter(exchange);
+        }
+
+        String username = jwtUtil.extractUsername(token);
+        String role = jwtUtil.extractRole(token);
+
+        var authorities = List.of(new SimpleGrantedAuthority(role));
+        Authentication auth =
+                new UsernamePasswordAuthenticationToken(username, null, authorities);
+
+        return chain.filter(exchange)
+                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth));
     }
 }

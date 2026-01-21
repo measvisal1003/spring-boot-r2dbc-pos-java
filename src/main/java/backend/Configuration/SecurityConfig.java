@@ -31,9 +31,15 @@ public class SecurityConfig {
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS with custom configuration
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/api/v1/signup", "/api/v1/signin").permitAll()
+                        .pathMatchers("/api/v1/product/**").hasAnyRole("ROLE_ADMIN", "ROLE_USER")
+                        .pathMatchers("/api/v1/category/**").hasAnyRole("ROLE_ADMIN", "ROLE_USER")
+                        .pathMatchers("/api/v1/expense/**").hasAnyRole("ROLE_ADMIN", "ROLE_USER")
+                        .pathMatchers("/api/v1/order/**").hasAnyRole("ROLE_ADMIN", "ROLE_USER")
+                        .pathMatchers("/api/v1/user/me").hasAnyRole("ROLE_ADMIN", "ROLE_USER")
+                        .pathMatchers("/api/v1/user/**").hasRole("ROLE_ADMIN")
+                        .pathMatchers("/api/v1/auth/**").permitAll()
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
@@ -44,7 +50,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:3000"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true);
 

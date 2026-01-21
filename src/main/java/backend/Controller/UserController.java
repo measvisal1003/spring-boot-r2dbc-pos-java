@@ -21,36 +21,34 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/all")
+    @GetMapping("/user/all")
     public Flux<UserDto> findAll() {
         return userService.findAll();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/user/{id}")
     public Mono<User> findById(@PathVariable Long id) {
         return userService.findById(id);
     }
 
-    // Sign Up/In API
-    @PostMapping("/signup")
+    @PostMapping("/auth/signup")
     public Mono<User> signUp(@RequestBody User user) {
         return userService.create(user);
     }
 
-    @PostMapping("/signin")
+    @PostMapping("/auth/signin")
     public Mono<ResponseEntity<Response>> signIn(@RequestBody Request request) {
         return userService.signIn(request)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
-    // END
 
-    @PutMapping("/update")
+    @PutMapping("/user/update")
     public Mono<User> update(@RequestBody User user) {
         return userService.update(user);
     }
 
-    @DeleteMapping("/delete")
+    @DeleteMapping("/user/delete")
     public Mono<Long> delete(@RequestParam Long id) {
         return userService.delete(id);
     }
