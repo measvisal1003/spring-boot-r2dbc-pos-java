@@ -24,6 +24,7 @@ public class Employee {
     public final static String FIRST_NAME_COLUMN = "firstName";
     public final static String LAST_NAME_COLUMN = "lastName";
     public final static String EMAIL_COLUMN = "email";
+    public final static String BRANCH_ID_COLUMN = "branchId";
     public final static String IS_ACTIVE_COLUMN = "isActive";
     public static final String CREATED_DATE_COLUMN = "createdDate";
     public static final String UPDATED_DATE_COLUMN = "updatedDate";
