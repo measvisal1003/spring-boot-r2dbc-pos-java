@@ -11,6 +11,7 @@ import reactor.core.publisher.Mono;
 import java.util.function.Function;
 
 public class PaginationUtils {
+
     public static final int DEFAULT_LIMIT = 10;
     public static final int DEFAULT_PAGE_NUMBER = 1;
 
@@ -26,20 +27,21 @@ public class PaginationUtils {
                 DEFAULT_LIMIT);
     }
 
+    // Dto
     public static <T, R> Mono<PageResponse<R>> fetchPagedResponse(
             R2dbcEntityTemplate r2dbcEntityTemplate,
             Class<T> entityClass,
             Function<T, R> mapper,
             int pageNumber,
             int pageSize,
-            String activeColumn,
+            Criteria criteria,
             Sort sort
     ) {
         Pageable pageable = createPageable(pageNumber, pageSize, sort);
         long offset = calculateOffset(pageable.getPageNumber(), pageable.getPageSize());
 
-        Mono<Long> count = r2dbcEntityTemplate.count(Query.query(Criteria.where(activeColumn).isTrue()), entityClass);
-        Query query = Query.query(Criteria.where(activeColumn).isTrue())
+        Mono<Long> count = r2dbcEntityTemplate.count(Query.query(criteria), entityClass);
+        Query query = Query.query(criteria)
                 .offset(offset)
                 .sort(pageable.getSort())
                 .limit(pageable.getPageSize());
@@ -52,6 +54,26 @@ public class PaginationUtils {
                         pageable.getPageNumber(),
                         pageable.getPageSize(),
                         totalRecords))
+        );
+    }
+
+    // Entity
+    public static <T> Mono<PageResponse<T>> fetchPagedResponse(
+            R2dbcEntityTemplate template,
+            Class<T> entityClass,
+            Integer pageNumber,
+            Integer pageSize,
+            Criteria criteria,
+            Sort sort
+    ) {
+        return fetchPagedResponse(
+                template,
+                entityClass,
+                Function.identity(),
+                pageNumber,
+                pageSize,
+                criteria,
+                sort
         );
     }
 }

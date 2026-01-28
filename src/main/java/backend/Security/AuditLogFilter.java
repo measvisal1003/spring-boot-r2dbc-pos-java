@@ -44,6 +44,7 @@ public class AuditLogFilter implements WebFilter {
                         .ipAddress(ipAddress)
                         .userAgent(userAgent)
                         .timestamp(LocalDateTime.now())
+                        .isComplete(true)
                         .build())
                 )
                 .then();

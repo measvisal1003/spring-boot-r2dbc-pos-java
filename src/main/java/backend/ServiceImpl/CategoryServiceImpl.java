@@ -98,7 +98,7 @@ public class CategoryServiceImpl implements CategoryService {
                 CategoryMapper::toDto,
                 Optional.ofNullable(pageNumber).orElse(PaginationUtils.DEFAULT_PAGE_NUMBER),
                 Optional.ofNullable(pageSize).orElse(PaginationUtils.DEFAULT_LIMIT),
-                Category.IS_ACTIVE_COLUMN,
+                Criteria.where(Category.IS_ACTIVE_COLUMN).isTrue(),
                 Sort.by(Sort.Order.desc(Category.CREATED_DATE_COLUMN),
                         Sort.Order.desc(Category.UPDATED_DATE_COLUMN))
         );

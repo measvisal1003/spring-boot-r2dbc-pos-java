@@ -55,10 +55,9 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         return PaginationUtils.fetchPagedResponse(
                 r2dbcEntityTemplate,
                 PurchaseOrder.class,
-                null,
                 Optional.ofNullable(pageNumber).orElse(PaginationUtils.DEFAULT_PAGE_NUMBER),
                 Optional.ofNullable(pageSize).orElse(PaginationUtils.DEFAULT_LIMIT),
-                PurchaseOrder.STATUS_COLUMN,
+                Criteria.where(PurchaseOrder.STATUS_COLUMN).isTrue(),
                 Sort.by(Sort.Order.by(PurchaseOrder.ORDER_DATE_COLUMN)).descending()
         );
     }

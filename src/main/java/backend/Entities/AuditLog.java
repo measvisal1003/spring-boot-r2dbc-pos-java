@@ -26,6 +26,7 @@ public class AuditLog {
     public static final String IP_ADDRESS_COLUMN = "ipAddress";
     public static final String USER_AGENT_COLUMN = "userAgent";
     public static final String TIMESTAMP_COLUMN = "timestamp";
+    public static final String IS_COMPLETE_COLUMN = "isComplete";
 
     @Id
     @Column(ID_COLUMN)
@@ -41,4 +42,6 @@ public class AuditLog {
     @Column(TIMESTAMP_COLUMN)
     @JsonSerialize(using = DateStringUtils.class)
     private LocalDateTime timestamp;
+    @Column(IS_COMPLETE_COLUMN)
+    private boolean isComplete;
 }

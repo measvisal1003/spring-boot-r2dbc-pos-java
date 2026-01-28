@@ -11,6 +11,7 @@ import backend.Utils.PaginationUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -53,7 +54,7 @@ public class ExpenseServiceImpl implements ExpenseService {
                 ExpenseMapper::toDto,
                 Optional.ofNullable(pageNumber).orElse(PaginationUtils.DEFAULT_PAGE_NUMBER),
                 Optional.ofNullable(pageSize).orElse(PaginationUtils.DEFAULT_LIMIT),
-                Expense.IS_COMPLETE_COLUMN,
+                Criteria.where(Expense.IS_COMPLETE_COLUMN).isTrue(),
                 Sort.by(Sort.Order.desc(Expense.CREATED_DATE_COLUMN))
         );
     }

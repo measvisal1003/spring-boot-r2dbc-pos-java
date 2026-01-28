@@ -1,12 +1,15 @@
 package backend.ServiceImpl;
 
 import backend.Entities.Brand;
+import backend.Entities.Category;
 import backend.Repository.BrandRepository;
 import backend.Service.BrandService;
 import backend.Utils.PageResponse;
 import backend.Utils.PaginationUtils;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -42,7 +45,7 @@ public class BrandServiceImpl implements BrandService {
         return brandRepository.findById(brand.getId())
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Brand not found")))
                 .flatMap(existingbrand -> {
-                    Brand.update(existingbrand);
+                    Brand.update(existingbrand, brand);
                     return brandRepository.save(existingbrand);
                 });
     }
@@ -59,11 +62,10 @@ public class BrandServiceImpl implements BrandService {
         return PaginationUtils.fetchPagedResponse(
                 r2dbcEntityTemplate,
                 Brand.class,
-                null,
                 Optional.ofNullable(pageNumber).orElse(PaginationUtils.DEFAULT_PAGE_NUMBER),
                 Optional.ofNullable(pageSize).orElse(PaginationUtils.DEFAULT_LIMIT),
                 null,
-                null
+                Sort.by(Sort.Order.desc(Brand.NAME_COLUMN))
         );
     }
 }

@@ -1,6 +1,7 @@
 package backend.ServiceImpl;
 
 import backend.Dto.CustomerDto;
+import backend.Entities.Brand;
 import backend.Entities.Customer;
 import backend.Mapper.CustomerMapper;
 import backend.Repository.CustomerRepository;
@@ -8,7 +9,9 @@ import backend.Service.CustomerService;
 import backend.Utils.PageResponse;
 import backend.Utils.PaginationUtils;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -73,8 +76,9 @@ public class CustomerServiceImpl implements CustomerService {
                 CustomerMapper::toDto,
                 Optional.ofNullable(pageNumber).orElse(PaginationUtils.DEFAULT_PAGE_NUMBER),
                 Optional.ofNullable(pageSize).orElse(PaginationUtils.DEFAULT_LIMIT),
-                Customer.IS_ACTIVE_COLUMN,
-                null
+                Criteria.where(Customer.IS_ACTIVE_COLUMN).isTrue(),
+                Sort.by(Sort.Order.desc(Customer.CREATED_DATE_COLUMN),
+                        Sort.Order.desc(Customer.UPDATED_DATE_COLUMN))
         );
     }
 }

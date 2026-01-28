@@ -1,6 +1,7 @@
 package backend.ServiceImpl;
 
 import backend.Dto.UserDto;
+import backend.Entities.Brand;
 import backend.Entities.CustomUserDetails;
 import backend.Entities.Role;
 import backend.Entities.User;
@@ -16,6 +17,7 @@ import backend.Utils.PaginationUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
@@ -165,8 +167,8 @@ public class UserServiceImpl implements UserService {
                 UserMapper::toDto,
                 Optional.ofNullable(pageNumber).orElse(PaginationUtils.DEFAULT_PAGE_NUMBER),
                 Optional.ofNullable(pageSize).orElse(PaginationUtils.DEFAULT_LIMIT),
-                User.IS_ACTIVE_COLUMN,
-                Sort.by(User.CREATED_DATE_COLUMN).descending()
+                Criteria.where(User.IS_ACTIVE_COLUMN).isTrue(),
+                Sort.by(Sort.Order.desc(User.CREATED_DATE_COLUMN))
         );
     }
 

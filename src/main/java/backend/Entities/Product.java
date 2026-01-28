@@ -83,6 +83,8 @@ public class Product {
         existingProduct.setQuantity(updatedProduct.getQuantity());
         existingProduct.setUnit(updatedProduct.getUnit());
         existingProduct.setActive(updatedProduct.isActive());
+        existingProduct.setCategoryId(updatedProduct.getCategoryId());
+        existingProduct.setBrandId(updatedProduct.getBrandId());
         return existingProduct;
     }
 }

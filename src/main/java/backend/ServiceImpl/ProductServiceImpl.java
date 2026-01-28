@@ -133,7 +133,7 @@ public class ProductServiceImpl implements ProductService {
                 ProductMapper::toDto,
                 Optional.ofNullable(pageNumber).orElse(PaginationUtils.DEFAULT_PAGE_NUMBER),
                 Optional.ofNullable(pageSize).orElse(PaginationUtils.DEFAULT_LIMIT),
-                Product.IS_ACTIVE_COLUMN,
+                Criteria.where(Product.IS_ACTIVE_COLUMN).isTrue(),
                 Sort.by(Sort.Order.desc(Product.CREATED_DATE_COLUMN),
                         Sort.Order.desc(Product.UPDATED_DATE_COLUMN))
         );
