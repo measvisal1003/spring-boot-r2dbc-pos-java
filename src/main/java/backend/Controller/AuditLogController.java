@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/api/v1/auth/auditlog")
+@RequestMapping("/api/v1/admin/auditlog")
 @AllArgsConstructor
 @CrossOrigin("*")
 public class AuditLogController {

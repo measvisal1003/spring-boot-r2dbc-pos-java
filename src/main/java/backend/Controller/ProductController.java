@@ -62,6 +62,6 @@ public class ProductController {
 
     @PutMapping("/add-quantity/{id}")
     public Mono<Product> addQuantity(@PathVariable Long id, @RequestBody AddQuantity quantity) {
-        return productService.addQuantity(id, quantity.addQuantity());
+        return productService.addQuantity(id, quantity);
     }
 }

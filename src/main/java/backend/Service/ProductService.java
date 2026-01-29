@@ -1,5 +1,6 @@
 package backend.Service;
 
+import backend.Dto.AddQuantity;
 import backend.Dto.ProductDto;
 import backend.Entities.Product;
 import backend.Utils.PageResponse;
@@ -19,5 +20,6 @@ public interface ProductService {
     //check existing for generating
     Mono<Boolean> existsByProductCode(String productCode);
     Mono<PageResponse<ProductDto>> findPagination(Integer pageNumber, Integer pageSize);
-    Mono<Product> addQuantity(Long id, int quantity);
+//    Mono<Product> addQuantity(Long id, int quantity);
+    Mono<Product> addQuantity(Long id, AddQuantity dto);
 }

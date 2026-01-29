@@ -99,6 +99,8 @@ public class UserServiceImpl implements UserService {
                                     .role(Role.ROLE_USER)
                                     .password(encodedPassword)
                                     .employeeId(user.getEmployeeId())
+                                    .isActive(true)
+                                    .createdDate(LocalDateTime.now())
                                     .build()
                     );
                 });

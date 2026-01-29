@@ -4,6 +4,7 @@ import backend.Entities.AuditLog;
 import backend.Repository.AuditLogRepository;
 import backend.Service.UserService;
 import backend.Utils.JwtUtil;
+import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -17,15 +18,11 @@ import java.util.Objects;
 
 @Component
 @Order(-1)
+@AllArgsConstructor
 public class AuditLogFilter implements WebFilter {
 
     private final AuditLogRepository repository;
     private final JwtUtil jwtUtil;
-
-    public AuditLogFilter(AuditLogRepository repository, JwtUtil jwtUtil) {
-        this.repository = repository;
-        this.jwtUtil = jwtUtil;
-    }
 
     @NotNull
     @Override
@@ -40,7 +37,9 @@ public class AuditLogFilter implements WebFilter {
         return chain.filter(exchange)
                 .then(repository.save(AuditLog.builder()
                         .userId(userId)
-                        .action(method + " " + path)
+                        .method(method)
+                        .path(path)
+                        .param(param)
                         .ipAddress(ipAddress)
                         .userAgent(userAgent)
                         .timestamp(LocalDateTime.now())

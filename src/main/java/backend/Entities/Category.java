@@ -54,10 +54,10 @@ public class Category {
                 .updatedDate(category.getUpdatedDate());
     }
 
-    public static Category update(Category category) {
-        category.setCode(category.getCode());
-        category.setName(category.getName());
-        category.setActive(category.isActive());
-        return category;
+    public static Category update(Category existing, Category updated) {
+        existing.setCode(updated.getCode());
+        existing.setName(updated.getName());
+        existing.setActive(updated.isActive());
+        return existing;
     }
 }

@@ -1,16 +1,21 @@
 package backend.ServiceImpl;
 
+import backend.Dto.AddQuantity;
 import backend.Dto.ProductDto;
+import backend.Entities.Method;
 import backend.Entities.Product;
+import backend.Entities.QuantityAdjustment;
 import backend.Mapper.ProductMapper;
 import backend.Repository.BrandRepository;
 import backend.Repository.CategoryRepository;
 import backend.Repository.ProductRepository;
 import backend.Service.ProductService;
+import backend.Service.UserService;
 import backend.Utils.PageResponse;
 import backend.Utils.PaginationUtils;
 import backend.Utils.RepositoryUtils;
 import lombok.AllArgsConstructor;
+import org.apache.commons.logging.Log;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.query.Criteria;
@@ -32,6 +37,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final BrandRepository brandRepository;
+    private final UserService userService;
     private final R2dbcEntityTemplate r2dbcEntityTemplate;
     private final RepositoryUtils repositoryUtils;
 
@@ -49,12 +55,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Mono<Product> findById(Long id) {
-        return repositoryUtils.findById(r2dbcEntityTemplate,
-                                        Product.class,
-                                        Product.ID_COLUMN,
-                                        id,
-                                        Product.IS_ACTIVE_COLUMN,
-                                        Product.LABEL);
+        return productRepository.findById(id);
     }
 
     @Override
@@ -134,26 +135,81 @@ public class ProductServiceImpl implements ProductService {
                 Optional.ofNullable(pageNumber).orElse(PaginationUtils.DEFAULT_PAGE_NUMBER),
                 Optional.ofNullable(pageSize).orElse(PaginationUtils.DEFAULT_LIMIT),
                 Criteria.where(Product.IS_ACTIVE_COLUMN).isTrue(),
-                Sort.by(Sort.Order.desc(Product.CREATED_DATE_COLUMN),
-                        Sort.Order.desc(Product.UPDATED_DATE_COLUMN))
+                Sort.by(Sort.Order.desc(Product.CREATED_DATE_COLUMN))
         );
     }
 
-    @Override
-    public Mono<Product> addQuantity(Long id, int addQuantity) {
-        return r2dbcEntityTemplate.select(Product.class)
-                .matching(Query.query(Criteria.where(Product.ID_COLUMN).is(id)))
-                .one()
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found")))
-                .flatMap( product -> {
-                    int newQuantity = product.getQuantity() + addQuantity;
-                    product.setQuantity(newQuantity);
-                    return r2dbcEntityTemplate.update(Product.class)
-                            .matching(Query.query(Criteria.where(Product.ID_COLUMN).is(id)))
-                            .apply(Update.update(Product.QUANTITY_COLUMN, newQuantity)
-                                    .set(Product.UPDATED_DATE_COLUMN, LocalDateTime.now()))
-                                    .thenReturn(product);
-                });
-    }
+//    @Override
+//    public Mono<Product> addQuantity(Long id, int addQuantity) {
+//        return r2dbcEntityTemplate.select(Product.class)
+//                .matching(Query.query(Criteria.where(Product.ID_COLUMN).is(id)))
+//                .one()
+//                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found")))
+//                .flatMap( product -> {
+//                    int newQuantity = product.getQuantity() + addQuantity;
+//                    product.setQuantity(newQuantity);
+//                    return r2dbcEntityTemplate.update(Product.class)
+//                            .matching(Query.query(Criteria.where(Product.ID_COLUMN).is(id)))
+//                            .apply(Update.update(Product.QUANTITY_COLUMN, newQuantity)
+//                                    .set(Product.UPDATED_DATE_COLUMN, LocalDateTime.now()))
+//                                    .thenReturn(product);
+//                });
+//    }
 
+    @Override
+    public Mono<Product> addQuantity(Long id, AddQuantity dto) {
+        if (dto == null || dto.method() == null) {
+            return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Method is required"));
+        }
+        if (dto.addQuantity() <= 0) {
+            return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantity must be > 0"));
+        }
+
+        return userService.currentUser()
+                .flatMap(userId ->
+                        r2dbcEntityTemplate.select(Product.class)
+                                .matching(Query.query(Criteria.where(Product.ID_COLUMN).is(id)))
+                                .one()
+                                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found")))
+                                .flatMap(product -> {
+                                    int currentQty = product.getQuantity();
+                                    int delta = dto.method() == Method.ADD ? dto.addQuantity() : -dto.addQuantity();
+                                    int newQty = currentQty + delta;
+
+                                    if (newQty < 0) {
+                                        return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient stock"));
+                                    }
+
+                                    Query updateQuery = Query.query(Criteria.where(Product.ID_COLUMN).is(id).and(Product.QUANTITY_COLUMN).is(currentQty));
+
+                                    return r2dbcEntityTemplate.update(Product.class)
+                                            .matching(updateQuery)
+                                            .apply(Update.update(Product.QUANTITY_COLUMN, newQty)
+                                                    .set(Product.UPDATED_DATE_COLUMN, LocalDateTime.now()))
+                                            .flatMap(rows -> {
+                                                if (rows == 0) {
+                                                    return Mono.error(new ResponseStatusException(
+                                                            HttpStatus.CONFLICT,
+                                                            "Quantity was changed by another request. Please retry."
+                                                    ));
+                                                }
+
+                                                QuantityAdjustment qa = new QuantityAdjustment();
+                                                qa.setProductName(product.getName());
+                                                qa.setUserId(userId);
+                                                qa.setMethod(dto.method());
+                                                qa.setQuantity(dto.addQuantity());
+                                                qa.setComplete(true);
+                                                qa.setCreatedDate(LocalDateTime.now());
+
+                                                product.setQuantity(newQty);
+                                                product.setUpdatedDate(LocalDateTime.now());
+
+                                                return r2dbcEntityTemplate.insert(QuantityAdjustment.class)
+                                                        .using(qa)
+                                                        .thenReturn(product);
+                                            });
+                                })
+                );
+    }
 }

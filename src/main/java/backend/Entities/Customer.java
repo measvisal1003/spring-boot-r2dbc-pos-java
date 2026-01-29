@@ -58,11 +58,11 @@ public class Customer {
                 .address(customer.getAddress());
     }
 
-    public static Customer update(Customer customer) {
-        customer.setName(customer.getName());
-        customer.setEmail(customer.getEmail());
-        customer.setPhone(customer.getPhone());
-        customer.setAddress(customer.getAddress());
-        return customer;
+    public static Customer update(Customer existing, Customer updated) {
+        existing.setName(updated.getName());
+        existing.setEmail(updated.getEmail());
+        existing.setPhone(updated.getPhone());
+        existing.setAddress(updated.getAddress());
+        return existing;
     }
 }

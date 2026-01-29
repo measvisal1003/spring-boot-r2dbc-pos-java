@@ -74,7 +74,7 @@ public class CategoryServiceImpl implements CategoryService {
     public Mono<Category> update(Category category) {
         return categoryRepository.findById(category.getId())
                 .flatMap(existingCategory -> {
-                    Category.update(existingCategory)
+                    Category.update(existingCategory, category)
                             .setUpdatedDate(LocalDateTime.now());
                     return categoryRepository.save(existingCategory);
                 });

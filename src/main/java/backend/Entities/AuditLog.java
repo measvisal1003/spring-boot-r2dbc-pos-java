@@ -22,7 +22,9 @@ public class AuditLog {
     public static final String LABEL = "auditLog";
     public static final String ID_COLUMN = "id";
     public static final String USER_ID_COLUMN = "userId";
-    public static final String ACTION_COLUMN = "action";
+    public static final String METHOD_COLUMN = "method";
+    public static final String PATH_COLUMN = "path";
+    public static final String PARAM_COLUMN = "param";
     public static final String IP_ADDRESS_COLUMN = "ipAddress";
     public static final String USER_AGENT_COLUMN = "userAgent";
     public static final String TIMESTAMP_COLUMN = "timestamp";
@@ -33,8 +35,12 @@ public class AuditLog {
     private Long id;
     @Column(USER_ID_COLUMN)
     private Long userId;
-    @Column(ACTION_COLUMN)
-    private String action;
+    @Column(METHOD_COLUMN)
+    private String method;
+    @Column(PATH_COLUMN)
+    private String path;
+    @Column(PARAM_COLUMN)
+    private String param;
     @Column(IP_ADDRESS_COLUMN)
     private String ipAddress;
     @Column(USER_AGENT_COLUMN)
