@@ -42,3 +42,5 @@ src/main/resources/*
 src/main/resources/application-dev.properties
 src/main/resources/application-production.properties
 src/main/java/backend/Configuration/R2Props.java
+/compose.yaml
+/Dockerfile
