@@ -64,4 +64,15 @@ public class SupplierContact {
                 .createdDate(supplierContact.getCreatedDate())
                 .updatedDate(supplierContact.getUpdatedDate());
     }
+
+    public static SupplierContact update(SupplierContact existing, SupplierContact updated) {
+            existing.setName(updated.getName());
+            existing.setEmail(updated.getEmail());
+            existing.setPhone(updated.getPhone());
+            existing.setPosition(updated.getPosition());
+            existing.setActive(updated.isActive());
+            existing.setUpdatedDate(updated.getUpdatedDate());
+
+        return existing;
+    }
 }

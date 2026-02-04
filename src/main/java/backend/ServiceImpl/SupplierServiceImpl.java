@@ -12,7 +12,10 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
@@ -43,6 +46,16 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
+    public Flux<Supplier> findAll() {
+        return supplierRepository.findAll();
+    }
+
+    @Override
+    public Mono<Supplier> findById(Long id) {
+        return supplierRepository.findById(id);
+    }
+
+    @Override
     public Mono<Supplier> create(Supplier supplier) {
         return supplierRepository.save(Supplier.from(supplier)
                         .isActive(true)
@@ -50,4 +63,27 @@ public class SupplierServiceImpl implements SupplierService {
                         .build()
         );
     }
+
+    @Override
+    public Mono<Supplier> update(Supplier supplier) {
+        return supplierRepository.findById(supplier.getId())
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "supplier not found")))
+                .flatMap( existingSupplier -> {
+                    Supplier.update(existingSupplier, supplier)
+                            .setUpdatedDate(LocalDateTime.now());
+                    return supplierRepository.save(existingSupplier);
+                });
+    }
+
+    @Override
+    public Mono<Long> delete(Long id) {
+        return supplierRepository.findById(id)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found")))
+                .flatMap(category ->
+                        supplierRepository.deleteById(id)
+                                .thenReturn(id)
+                );
+    }
+
+
 }

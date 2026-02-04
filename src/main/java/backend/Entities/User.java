@@ -61,13 +61,12 @@ public class User{
                 .isActive(user.isActive());
     }
 
-    public static User update(User user) {
-        user.setUsername(user.getUsername());
-        user.setPassword(user.getPassword());
-        user.setRole(user.getRole());
-        user.setEmployeeId(user.getEmployeeId());
-        user.setActive(user.isActive());
-        return user;
+    public static User update(User existing, User updated) {
+        existing.setUsername(updated.getUsername());
+        existing.setPassword(updated.getPassword());
+        existing.setRole(updated.getRole());
+        existing.setActive(updated.isActive());
+        return existing;
     }
 
 }

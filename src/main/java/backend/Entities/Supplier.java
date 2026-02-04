@@ -27,6 +27,8 @@ public class Supplier {
     public static final String ADDRESS_COLUMN = "address";
     public static final String IS_ACTIVE_COLUMN = "isActive";
     public static final String CREATED_DATE_COLUMN = "createdDate";
+    public static final String UPDATED_DATE_COLUMN = "updatedDate";
+
 
     @Id
     @Column(ID_COLUMN)
@@ -44,6 +46,9 @@ public class Supplier {
     @Column(CREATED_DATE_COLUMN)
     @JsonSerialize(using = DateStringUtils.class)
     private LocalDateTime createdDate;
+    @Column(UPDATED_DATE_COLUMN)
+    @JsonSerialize(using = DateStringUtils.class)
+    private LocalDateTime updatedDate;
 
     public static SupplierBuilder from(Supplier supplier) {
         return Supplier.builder()
@@ -54,5 +59,16 @@ public class Supplier {
                 .address(supplier.getAddress())
                 .isActive(supplier.isActive())
                 .createdDate(supplier.getCreatedDate());
+
+    }
+
+    public static Supplier update(Supplier existing, Supplier updated) {
+        existing.setName(updated.getName());
+        existing.setContact(updated.getContact());
+        existing.setPhone(updated.getPhone());
+        existing.setAddress(updated.getAddress());
+        existing.setActive(updated.isActive());
+        existing.setUpdatedDate(updated.getUpdatedDate());
+        return existing;
     }
 }

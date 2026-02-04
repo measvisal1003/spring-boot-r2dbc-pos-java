@@ -108,10 +108,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<User> update(User user) {
+        var encodedPassword = passwordEncoder.encode(user.getPassword());
         return userRepository.findById(user.getId())
                 .flatMap(existingUser -> {
-                    User.update(existingUser)
-                            .setUpdatedDate(LocalDateTime.now());
+                    User.update(existingUser, user);
+                    existingUser.setUpdatedDate(LocalDateTime.now());
+                    existingUser.setPassword(encodedPassword);
 
                     return userRepository.save(existingUser);
                 });
