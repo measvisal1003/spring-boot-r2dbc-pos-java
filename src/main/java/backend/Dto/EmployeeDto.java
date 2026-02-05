@@ -16,5 +16,9 @@ public class EmployeeDto {
     private String firstName;
     private String lastName;
     private String email;
+    private String phone;
+    private String natId;
+    private String nssfId;
+    private String imageUrl;
     private boolean isActive;
 }

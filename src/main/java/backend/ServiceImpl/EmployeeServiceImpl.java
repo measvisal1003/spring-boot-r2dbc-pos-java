@@ -8,14 +8,17 @@ import backend.Mapper.EmployeeMapper;
 import backend.Mapper.UserMapper;
 import backend.Repository.EmployeeRepository;
 import backend.Service.EmployeeService;
+import backend.Service.FileService;
 import backend.Utils.NestedPaginationUtils;
 import backend.Utils.PageResponse;
 import backend.Utils.PaginationUtils;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
@@ -24,13 +27,23 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
-@AllArgsConstructor
 public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final R2dbcEntityTemplate r2dbcEntityTemplate;
+    private final FileService fileService;
+    private final String publicUrl;
+
+    public EmployeeServiceImpl(EmployeeRepository employeeRepository, R2dbcEntityTemplate r2dbcEntityTemplate, FileService fileService,@Value("${r2.publicUrl}")  String publicUrl) {
+        this.employeeRepository = employeeRepository;
+        this.r2dbcEntityTemplate = r2dbcEntityTemplate;
+        this.fileService = fileService;
+        this.publicUrl = publicUrl;
+    }
+
 
     @Override
     public Flux<EmployeeDto> findAll() {
@@ -41,10 +54,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public Mono<Employee> findById(Long id) {
         return employeeRepository.findById(id)
-                .switchIfEmpty(Mono.error(new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Employee not found with id: " + id))
-                );
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"Employee not found")));
     }
 
     @Override
@@ -56,8 +66,35 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    public Mono<String> uploadImage(Long id, FilePart file) {
+        String imageKey = "employee/profile/" + id;
+        String imageUrl = publicUrl + "/" + imageKey;
+
+        return employeeRepository.findById(id)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee not found")))
+                .flatMap(employee -> {
+//                    String oldKey = employee.getImageKey();
+//
+//                    Mono<Void> deleteOld = (oldKey == null || oldKey.isBlank())
+//                            ? Mono.empty()
+//                            : fileService.deleteFile(oldKey)
+//                            .onErrorResume(e -> Mono.empty());
+
+                    return fileService.uploadFile(imageKey, file)
+//                            .then(deleteOld)
+                            .then(Mono.defer(() -> {
+                                employee.setImageKey(imageKey);
+                                employee.setImageUrl(imageUrl);
+                                return employeeRepository.save(employee);
+                            }));
+                })
+                .thenReturn("Uploaded");
+    }
+
+    @Override
     public Mono<Employee> update(Employee employee) {
         return employeeRepository.findById(employee.getId())
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee not found")))
                 .flatMap(existingEmployee -> {
                         Employee.update(existingEmployee, employee)
                                 .setUpdatedDate(LocalDateTime.now());

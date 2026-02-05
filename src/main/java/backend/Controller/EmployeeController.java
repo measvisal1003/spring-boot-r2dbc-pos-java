@@ -6,6 +6,8 @@ import backend.Entities.Employee;
 import backend.Service.EmployeeService;
 import backend.Utils.PageResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -46,6 +48,11 @@ public class EmployeeController {
     @GetMapping
     public Mono<PageResponse<EmployeeUser>> findPagination(@RequestParam Integer pageNumber, Integer pageSize) {
         return employeeService.findPagination(pageNumber, pageSize);
+    }
+
+    @PostMapping(path = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Mono<String> uploadImage(@PathVariable Long id, @RequestPart("file")FilePart file) {
+        return employeeService.uploadImage(id, file);
     }
 
 

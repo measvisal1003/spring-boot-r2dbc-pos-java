@@ -17,6 +17,10 @@ public class EmployeeMapper {
         dto.setFirstName(employee.getFirstName());
         dto.setLastName(employee.getLastName());
         dto.setEmail(employee.getEmail());
+        dto.setPhone(employee.getPhone());
+        dto.setNatId(employee.getNatId());
+        dto.setNssfId(employee.getNssfId());
+        dto.setImageUrl(employee.getImageUrl());
         dto.setActive(employee.isActive());
         return dto;
     }
