@@ -8,6 +8,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 public interface FileService {
 
     Mono<Void> uploadFile(String keyName, FilePart file);
+    Mono<Void> deleteFile(String keyName);
 
     ResponseInputStream<GetObjectResponse> getFile(String keyName);
 }
