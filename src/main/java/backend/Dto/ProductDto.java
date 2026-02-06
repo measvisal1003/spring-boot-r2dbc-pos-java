@@ -25,5 +25,6 @@ public class ProductDto {
     private int quantity;
     private Unit unit;
     private boolean isActive;
+    private String imageUrl;
 
 }

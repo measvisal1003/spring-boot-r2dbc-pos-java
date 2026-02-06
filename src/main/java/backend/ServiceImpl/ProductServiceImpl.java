@@ -1,6 +1,7 @@
 package backend.ServiceImpl;
 
 import backend.Dto.AddQuantity;
+import backend.Dto.EmployeeDto;
 import backend.Dto.ProductDto;
 import backend.Entities.Method;
 import backend.Entities.Product;
@@ -8,7 +9,9 @@ import backend.Entities.QuantityAdjustment;
 import backend.Mapper.ProductMapper;
 import backend.Repository.BrandRepository;
 import backend.Repository.CategoryRepository;
+import backend.Repository.EmployeeRepository;
 import backend.Repository.ProductRepository;
+import backend.Service.FileService;
 import backend.Service.ProductService;
 import backend.Service.UserService;
 import backend.Utils.PageResponse;
@@ -16,12 +19,14 @@ import backend.Utils.PaginationUtils;
 import backend.Utils.RepositoryUtils;
 import lombok.AllArgsConstructor;
 import org.apache.commons.logging.Log;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.data.relational.core.query.Update;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
@@ -31,26 +36,29 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
-@AllArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-    private final BrandRepository brandRepository;
     private final UserService userService;
+    private final FileService fileService;
+    private final String publicUrl;
     private final R2dbcEntityTemplate r2dbcEntityTemplate;
-    private final RepositoryUtils repositoryUtils;
+
+    public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository, UserService userService, FileService fileService,@Value("${r2.publicUrl}") String publicUrl, R2dbcEntityTemplate r2dbcEntityTemplate) {
+        this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
+        this.userService = userService;
+        this.fileService = fileService;
+        this.publicUrl = publicUrl;
+        this.r2dbcEntityTemplate = r2dbcEntityTemplate;
+    }
+
 
     @Override
     public Flux<ProductDto> findAll() {
         return productRepository.findAll()
                 .map(ProductMapper::toDto);
-
-//        return repositoryUtils.findAllActive(r2dbcEntityTemplate,
-//                                            Product.class,
-//                                            Product.IS_ACTIVE_COLUMN,
-//                                            Product.LABEL)
-//                .map(ProductMapper::toDto);
     }
 
     @Override
@@ -88,7 +96,6 @@ public class ProductServiceImpl implements ProductService {
                     );
                 });
     }
-
 
     @Override
     public Mono<Product> update(Product product) {
@@ -138,23 +145,6 @@ public class ProductServiceImpl implements ProductService {
                 Sort.by(Sort.Order.desc(Product.CREATED_DATE_COLUMN))
         );
     }
-
-//    @Override
-//    public Mono<Product> addQuantity(Long id, int addQuantity) {
-//        return r2dbcEntityTemplate.select(Product.class)
-//                .matching(Query.query(Criteria.where(Product.ID_COLUMN).is(id)))
-//                .one()
-//                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found")))
-//                .flatMap( product -> {
-//                    int newQuantity = product.getQuantity() + addQuantity;
-//                    product.setQuantity(newQuantity);
-//                    return r2dbcEntityTemplate.update(Product.class)
-//                            .matching(Query.query(Criteria.where(Product.ID_COLUMN).is(id)))
-//                            .apply(Update.update(Product.QUANTITY_COLUMN, newQuantity)
-//                                    .set(Product.UPDATED_DATE_COLUMN, LocalDateTime.now()))
-//                                    .thenReturn(product);
-//                });
-//    }
 
     @Override
     public Mono<Product> addQuantity(Long id, AddQuantity dto) {
@@ -211,5 +201,55 @@ public class ProductServiceImpl implements ProductService {
                                             });
                                 })
                 );
+    }
+
+    @Override
+    public Mono<Product> createWithImage(Product product, Mono<FilePart> file) {
+        product.setActive(true);
+        product.setCreatedDate(LocalDateTime.now());
+
+        return productRepository.save(product)
+                .flatMap(products -> file.flatMap(
+                        filePart -> {
+                            String imageKey = "product/" + product.getId();
+                            String imageUrl = publicUrl + "/" + imageKey;
+
+                            return fileService.uploadFile(imageKey, filePart)
+                                    .then(Mono.defer(() -> {
+                                        product.setImageKey(imageKey);
+                                        product.setImageUrl(imageUrl);
+                                        return productRepository.save(product);
+                                    }))
+                                    .onErrorResume(e -> fileService.deleteFile(imageKey)
+                                            .then(Mono.error(e)));
+                        })
+                        .switchIfEmpty(Mono.just(product))
+                );
+    }
+
+    @Override
+    public Mono<String> updateImage(Long id, FilePart file) {
+        String imageKey = "product/" + id;
+        String imageUrl = publicUrl + "/" + imageKey;
+
+        return productRepository.findById(id)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found")))
+                .flatMap(product -> {
+                    String oldKey = product.getImageKey();
+
+                    Mono<Void> deleteOld = (oldKey == null || oldKey.isBlank())
+                            ? Mono.empty()
+                            : fileService.deleteFile(oldKey)
+                            .onErrorResume(e -> Mono.empty());
+
+                    return fileService.uploadFile(imageKey, file)
+                            .then(deleteOld)
+                            .then(Mono.defer(() -> {
+                                product.setImageKey(imageKey);
+                                product.setImageUrl(imageUrl);
+                                return productRepository.save(product);
+                            }));
+                })
+                .thenReturn("Uploaded");
     }
 }

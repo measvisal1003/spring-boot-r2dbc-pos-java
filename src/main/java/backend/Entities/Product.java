@@ -30,6 +30,8 @@ public class Product {
     public static final String PRICE_COLUMN = "price";
     public static final String QUANTITY_COLUMN = "quantity";
     public static final String UNIT_COLUMN = "unit";
+    public static final String IMAGE_KEY_COLUMN = "imageKey";
+    public static final String IMAGE_URL_COLUMN = "imageUrl";
     public static final String BRAND_ID_COLUMN = "brandId";
     public static final String CATEGORY_ID_COLUMN = "categoryId";
     public static final String IS_ACTIVE_COLUMN = "isActive";
@@ -51,6 +53,10 @@ public class Product {
     private int quantity;
     @Column(UNIT_COLUMN)
     private Unit unit;
+    @Column(IMAGE_KEY_COLUMN)
+    private String imageKey;
+    @Column(IMAGE_URL_COLUMN)
+    private String imageUrl;
     @Column(CATEGORY_ID_COLUMN)
     private Long categoryId;
     @Column(BRAND_ID_COLUMN)

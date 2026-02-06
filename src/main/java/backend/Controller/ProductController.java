@@ -1,12 +1,15 @@
 package backend.Controller;
 
 import backend.Dto.AddQuantity;
+import backend.Dto.EmployeeDto;
 import backend.Dto.ProductDto;
 import backend.Entities.Product;
 import backend.Repository.ProductRepository;
 import backend.Service.ProductService;
 import backend.Utils.PageResponse;
 import lombok.AllArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -63,5 +66,18 @@ public class ProductController {
     @PutMapping("/add-quantity/{id}")
     public Mono<Product> addQuantity(@PathVariable Long id, @RequestBody AddQuantity quantity) {
         return productService.addQuantity(id, quantity);
+    }
+
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Mono<Product> createWithImage(
+            @RequestPart("data") Mono<Product> data,
+            @RequestPart(value = "image", required = false) Mono<FilePart> image
+    ) {
+        return data.flatMap(dto -> productService.createWithImage(dto, image));
+    }
+
+    @PostMapping(path = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Mono<String> updateImage(@PathVariable Long id, @RequestPart("file")FilePart file) {
+        return productService.updateImage(id, file);
     }
 }

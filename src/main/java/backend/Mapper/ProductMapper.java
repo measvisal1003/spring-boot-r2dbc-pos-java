@@ -18,6 +18,7 @@ public class ProductMapper {
         dto.setQuantity(product.getQuantity());
         dto.setUnit(product.getUnit());
         dto.setActive(product.isActive());
+        dto.setImageUrl(product.getImageUrl());
 
         return dto;
     }
