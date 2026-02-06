@@ -133,12 +133,21 @@ public class UserServiceImpl implements UserService {
     public Mono<UserDto> whoAmI() {
         return ReactiveSecurityContextHolder.getContext()
                 .map(SecurityContext::getAuthentication)
-                .flatMap(auth -> {
-                    String username = auth.getName();
-                    return userRepository.findByUsername(username)
-                            .map(user -> new UserDto(user.getId(), user.getUsername(), user.getRole()));
-                });
+                .flatMap(auth -> userRepository.findByUsername(auth.getName()))
+                .flatMap(user ->
+                        employeeRepository.findById(user.getEmployeeId())
+                                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee not found")))
+                                .map(employee ->
+                                    new UserDto(
+                                            user.getId(),
+                                            user.getUsername(),
+                                            user.getRole(),
+                                            employee.getImageUrl()
+                                    )
+                                )
+                );
     }
+
 
     @Override
     public Mono<Long> currentUser() {
