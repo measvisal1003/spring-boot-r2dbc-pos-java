@@ -19,7 +19,7 @@ public interface CategoryService {
     Mono<Long> delete(Long id);
 
     Mono<PageResponse<CategoryDto>> findPagination(Integer pageNumber, Integer pageSize);
-    Mono<PageResponse<CategoryProduct>> findNestedPagination(Integer pageNumber, Integer pageSize);
+    Mono<PageResponse<CategoryProduct>> searchFiltered(String search ,Integer pageNumber, Integer pageSize);
 
 
 }

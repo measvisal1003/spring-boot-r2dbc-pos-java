@@ -10,6 +10,6 @@ import java.util.List;
 
 public record CategoryProduct(
         Category category,
-        List<Product> products
+        List<Product> product
 ) {
 }

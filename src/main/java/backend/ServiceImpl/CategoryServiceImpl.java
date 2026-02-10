@@ -5,8 +5,10 @@ import backend.Dto.CategoryProduct;
 import backend.Entities.Category;
 import backend.Entities.Product;
 import backend.Mapper.CategoryMapper;
+import backend.Mapper.ProductMapper;
 import backend.Repository.CategoryRepository;
 import backend.Service.CategoryService;
+import backend.Utils.FilteredWithNestedPaginationUtils;
 import backend.Utils.NestedPaginationUtils;
 import backend.Utils.PageResponse;
 import backend.Utils.PaginationUtils;
@@ -23,6 +25,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -105,13 +108,23 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public Mono<PageResponse<CategoryProduct>> findNestedPagination(Integer pageNumber, Integer pageSize) {
-        return NestedPaginationUtils.fetchPagination(
+    public Mono<PageResponse<CategoryProduct>> searchFiltered(String search, Integer pageNumber, Integer pageSize) {
+        if (search == null || search.isBlank()) {
+            int limit = (pageSize != null) ? pageSize : 10;
+            return Mono.just(new PageResponse<>(List.of(), 1, limit, 0));
+        }
+
+        // Define search pattern for partial matching
+        String pattern = "%" + search + "%";
+        Criteria criteria = Criteria.where(Category.NAME_COLUMN).like(pattern)
+                .or(Category.CODE_COLUMN).like(pattern);
+
+        return FilteredWithNestedPaginationUtils.fetchFilteredPagination(
                 r2dbcEntityTemplate,
                 Category.class,
-                Category.IS_ACTIVE_COLUMN,
-                Optional.ofNullable(pageNumber).orElse(PaginationUtils.DEFAULT_PAGE_NUMBER),
-                Optional.ofNullable(pageSize).orElse(PaginationUtils.DEFAULT_LIMIT),
+                criteria,
+                pageNumber,
+                pageSize,
                 category -> r2dbcEntityTemplate.select(Product.class)
                         .matching(Query.query(Criteria.where(Product.CATEGORY_ID_COLUMN).is(category.getId())))
                         .all()
@@ -119,4 +132,7 @@ public class CategoryServiceImpl implements CategoryService {
                 CategoryProduct::new
         );
     }
+
+
+
 }

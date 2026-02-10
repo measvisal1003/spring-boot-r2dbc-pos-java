@@ -48,8 +48,8 @@ public class CategoryController {
         return categoryService.findPagination(pageNumber, pageSize);
     }
 
-    @GetMapping("/detail")
-    public Mono<PageResponse<CategoryProduct>> findNestedPagination(@RequestParam Integer pageNumber, Integer pageSize) {
-        return categoryService.findNestedPagination(pageNumber, pageSize);
+    @GetMapping("/search")
+    public Mono<PageResponse<CategoryProduct>> findNestedPagination(@RequestParam String search, @RequestParam Integer pageNumber, Integer pageSize) {
+        return categoryService.searchFiltered(search, pageNumber, pageSize);
     }
 }
